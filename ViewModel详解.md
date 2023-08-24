@@ -547,7 +547,8 @@ ViewModel 对象存在的时间范围是获取 ViewModel 时传递给 ViewModelP
 
 ![ViewModelCycle](https://github.com/ashenone0917/image/blob/main/ViewModelCycle.jpg)
 
-
+## 简短总结
+ViewModel在activity结束后会有application暂存，在activity重建后
 
 参考： https://juejin.cn/post/6920122401678163976
 
