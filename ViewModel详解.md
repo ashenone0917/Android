@@ -567,6 +567,8 @@ ViewModel 对象存在的时间范围是获取 ViewModel 时传递给 ViewModelP
 
 ## 简短总结
 ViewModel在activity结束后会有application暂存，在activity重建后
-
+**注意**： 
+由于是在DestroyActivity的时候才保存ViewModelStore，所以在当前activity的基础上start另一个Activity是不会共享到当前Activity创建的ViewModel的，因为还没有Destory保存，目前也只有看到调用handleRelaunchActivity的情况下才能复用
+ViewModel，暂且当作只有旋转的时候
 参考： https://juejin.cn/post/6920122401678163976
 
