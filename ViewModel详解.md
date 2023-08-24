@@ -234,7 +234,7 @@ public class ViewModelStore {
 ```
 ViewModelStore中包含了一个用于存储ViewModel的hashmap，而key值后面可以看到
 #### 3.1.2 Factory参数
-```
+```java
 public inline fun <reified VM : ViewModel> ComponentActivity.viewModels(
     noinline extrasProducer: (() -> CreationExtras)? = null,
     noinline factoryProducer: (() -> Factory)? = null
@@ -263,7 +263,7 @@ public ViewModelProvider.Factory getDefaultViewModelProviderFactory() {
 ```
 当没有传入Factory的时候，使用的就是默认的factory，而defaultViewModelProviderFactory的类型是SavedStateViewModelFactory，具体不往里细看，但是后续毁掉用factory的create函数用于创建ViewModel
 如果需要传入factory，可以自己实现一个fatcory后传入，如下
-```
+```kotlin
 class TestFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(Test::class.java)) {
@@ -276,7 +276,7 @@ class TestFactory(private val context: Context) : ViewModelProvider.Factory {
 
 ### 3.2 创建ViewModel
 接下来看看get(viewModelClass.java)也就是ViewModelProvider的get函数
-```
+```java
 public open operator fun <T : ViewModel> get(modelClass: Class<T>): T {
         val canonicalName = modelClass.canonicalName //类的规范名称，其实就是类的完整类名，例如com.example.MyClass包含了包名+类名
             ?: throw IllegalArgumentException("Local and anonymous classes can not be ViewModels")
@@ -312,7 +312,7 @@ public open operator fun <T : ViewModel> get(key: String, modelClass: Class<T>):
 
 ## 4.ViewModel如何在Activity销毁后仍保持着数据
 通过上面可以看出ViewModel是从ViewModelStore中获取的，当getLastNonConfigurationInstance()能够返回NonConfigurationInstances对象时，ViewModelStore是从NonConfigurationInstances对象中获得的，说明可以推测出NonConfigurationInstances保存着上一个activity的ViewModelStore，所以接着看看getLastNonConfigurationInstance()
-```
+```java
 public class Activity extends ContextThemeWrapper
         implements LayoutInflater.Factory2,
         Window.Callback, KeyEvent.Callback,
@@ -339,7 +339,7 @@ public class Activity extends ContextThemeWrapper
 }
 ```
 可以看到是在activityattch的时候重新设置的mLastNonConfigurationInstances，那么调用attach的地方是
-```
+```java
 //这是启动activity的一步
 public final Activity startActivityNow(Activity parent, String id,
             Intent intent, ActivityInfo activityInfo, IBinder token, Bundle state,
@@ -389,7 +389,7 @@ public final Activity startActivityNow(Activity parent, String id,
 ```
 可以NonConfigurationInstances对象保存在ActivityClientRecord中，然后在重启Activity中的attach()方法中将NonConfigurationInstances拿回来，从而实现了数据的不丢失，接下来看看数据是怎么保存的
 既然要保存状态，那么必然是在onDestory()中，所以接下来看看performDestroyActivity
-```
+```java
 //代码来源 https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/app/ActivityThread.java;l=5400?q=performDestroyActivity
 /** Core implementation of activity destroy call. */
     void performDestroyActivity(ActivityClientRecord r, boolean finishing,//r是ActivityClientRecord类型
@@ -453,7 +453,7 @@ public final Activity startActivityNow(Activity parent, String id,
     }
 ```
 关键代码r.lastNonConfigurationInstances = r.activity.retainNonConfigurationInstances();接着看看retainNonConfigurationInstances
-```
+```java
 NonConfigurationInstances retainNonConfigurationInstances() {
         Object activity = onRetainNonConfigurationInstance();//这里获取到了activity，具体的实现在ComponentActivity
         HashMap<String, Object> children = onRetainNonConfigurationChildInstances();
@@ -485,7 +485,7 @@ NonConfigurationInstances retainNonConfigurationInstances() {
     }
 ```
 onRetainNonConfigurationInstance该方法在ComponentActivity的实现如下:
-```
+```java
 public final Object onRetainNonConfigurationInstance() {
         // Maintain backward compatibility.
         Object custom = onRetainCustomNonConfigurationInstance();
@@ -514,7 +514,7 @@ public final Object onRetainNonConfigurationInstance() {
 
 ## 5.ViewModel是何时回收的
 我们可以看到在创建ComponentActivity的时候，会添加一个Lifecycle的Observer。如下：
-```
+```java
 public ComponentActivity() {
        	...
         getLifecycle().addObserver(new LifecycleEventObserver() {
@@ -532,7 +532,7 @@ public ComponentActivity() {
 }
 ```
 在接收到Lifecycle.Event.ON_DESTROY，onDestroy的事件时候，会去调用 getViewModelStore().clear();方法。getViewModelStore我们知道其实就是ViewModeStore,clear方法如下：
-```
+```java
 public final void clear() {
         for (ViewModel vm : mMap.values()) {
             vm.clear();
