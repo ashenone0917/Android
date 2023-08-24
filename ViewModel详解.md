@@ -1,2 +1,9 @@
 ## ViewModel的作用
 ViewModel是以生命周期的方式存储和管理界面相关的数据。当系统销毁或重新创建Activity/Fragment的时候，那么存储在其中的数据都会消失，对于简单的数据，Activity可以通过onSaveInstanceState()方法从 onCreate() 中的捆绑包恢复其数据，但此方法仅适合可以序列化再反序列化的少量数据，而不适合数量可能较大的数据,ViewModel的出现，正好弥补了这一个不足。
+## 本文所使用相关依赖
+```
+implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
+implementation 'androidx.activity:activity-compose:1.7.0'
+```
+## 
+
