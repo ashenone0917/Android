@@ -521,8 +521,8 @@ public ComponentActivity() {
             @Override
             public void onStateChanged(@NonNull LifecycleOwner source,
                     @NonNull Lifecycle.Event event) {
-                if (event == Lifecycle.Event.ON_DESTROY) {
-                    if (!isChangingConfigurations()) {
+                if (event == Lifecycle.Event.ON_DESTROY) {////旋转屏幕销毁activity时会触发Lifecycle.Event.ON_DESTROY
+                    if (!isChangingConfigurations()) {//旋转屏幕销毁activity时不会进入此if内的代码去清理ViewModelStore，从而保存ViewModelStore，原因在下面
                         getViewModelStore().clear();
                     }
                 }
@@ -541,6 +541,24 @@ public final void clear() {
 }
 ```
 其实就是遍历map，把数据清空。
+在旋转屏幕销毁activity的时候不会清空ViewModelStore，可以看到是做了这么一个判断if (!isChangingConfigurations()) ，内部代码如下
+```java
+public boolean isChangingConfigurations() {
+        return mChangingConfigurations;
+}
+```
+此时会判断是否重置配置，
+而旋转屏幕销毁activity的时候会自动调用handleRelaunchActivity重启启动activity，此时会把mChangingConfigurations设置为true，从而不会清空ViewModelStore，数据得以继续使用
+```java
+Override
+    public void handleRelaunchActivity(ActivityClientRecord tmp,
+            PendingTransactionActions pendingActions) {
+	//...
+	r.activity.mChangingConfigurations = true;
+	//...
+}
+```
+如果使用finish等方式销毁activity则不会调用handleRelaunchActivity，那么就无法保存数据，且会清空ViewModelStore
 
 ## 6.ViewModel的生命周期
 ViewModel 对象存在的时间范围是获取 ViewModel 时传递给 ViewModelProvider 的 Lifecycle。ViewModel 将一直留在内存中，直到限定其存在时间范围的 Lifecycle 永久消失：对于 Activity，是在 Activity 完成时；而对于 Fragment，是在 Fragment 分离时。下面提供一张官网的图，可以很清晰的看到生命周期
